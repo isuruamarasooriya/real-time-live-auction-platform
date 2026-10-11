@@ -14,11 +14,13 @@ spec:
       labels:
         app: bidding-engine
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret
       containers:
       - name: bidding-engine
-        image: isuru/bidding-engine:latest
+        image: isuruamarasooriya/bidding-engine:latest
         ports:
-        - containerPort: 3000
+        - containerPort: 5003
         resources:
           requests:
             memory: "128Mi"
