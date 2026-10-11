@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: bidding-engine
+  labels:
+    app: bidding-engine
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: bidding-engine
+  template:
+    metadata:
+      labels:
+        app: bidding-engine
+    spec:
+      containers:
+      - name: bidding-engine
+        image: isuru/bidding-engine:latest
+        ports:
+        - containerPort: 3000
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "300m"
