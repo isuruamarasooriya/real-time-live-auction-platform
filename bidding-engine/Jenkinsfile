@@ -23,11 +23,11 @@ pipeline {
             }
         }
 
-        stage('3. Run Tests') {
+       stage('3. Run Tests') {
             steps {
                 script {
                     echo "Running unit tests inside the built image..."
-                    sh "docker run --rm --user root --entrypoint sh ${IMAGE_NAME}:${BUILD_NUMBER} -c 'npm install jest && npm test'"
+                    sh "docker run --rm --user root -e NODE_ENV=development --entrypoint sh ${IMAGE_NAME}:${BUILD_NUMBER} -c 'npm install && npm test'"
                 }
             }
         }
