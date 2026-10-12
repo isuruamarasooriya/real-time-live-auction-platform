@@ -26,14 +26,8 @@ pipeline {
         stage('3. Run Tests') {
             steps {
                 script {
-                    echo "Running unit tests in a temporary container..."
-                    sh """
-                    docker run --rm \
-                        -v \$(pwd)/${SERVICE_NAME}:/app \
-                        -w /app \
-                        node:18-alpine \
-                        sh -c "npm install && npm test"
-                    """
+                    echo "Running unit tests inside the built image..."
+                    sh "docker run --rm --entrypoint sh ${IMAGE_NAME}:${BUILD_NUMBER} -c 'npm install jest && npm test'"
                 }
             }
         }
