@@ -5,7 +5,7 @@ resource "kubernetes_namespace" "argocd" {
   }
 }
 
-# 2. Install Argo CD via Helm (for GitOps Deployment)
+# 2. Install Argo CD via Helm 
 resource "helm_release" "argocd" {
   name       = "argocd"
   repository = "https://argoproj.github.io/argo-helm"
@@ -78,5 +78,54 @@ resource "helm_release" "prometheus_adapter" {
   set {
     name  = "prometheus.port"
     value = "9090"
+  }
+}
+
+# 7. Install MongoDB via Helm
+resource "helm_release" "mongodb" {
+  name       = "mongodb"
+  repository = "https://charts.bitnami.com/bitnami"
+  chart      = "mongodb"
+  version    = "15.0.0"
+  namespace  = "default"
+
+  set {
+    name  = "image.tag"
+    value = "latest" 
+  }
+
+  set {
+    name  = "architecture"
+    value = "standalone"
+  }
+
+  set {
+    name  = "auth.rootPassword"
+    value = var.mongodb_root_password
+  }
+
+  set {
+    name  = "auth.usernames[0]"
+    value = "admin"
+  }
+
+  set {
+    name  = "auth.passwords[0]"
+    value = var.mongodb_root_password
+  }
+
+  set {
+    name  = "auth.databases[0]"
+    value = "auction_db"
+  }
+
+  set {
+    name  = "persistence.enabled"
+    value = "true"
+  }
+
+  set {
+    name  = "persistence.size"
+    value = "1Gi"
   }
 }

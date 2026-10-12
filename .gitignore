@@ -46,3 +46,4 @@ override.tf.json
 terraform.rc
 
 kubeseal.exe
+db-secret.yaml

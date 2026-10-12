@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: catalog-service
+  labels:
+    app: catalog-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: catalog-service
+  template:
+    metadata:
+      labels:
+        app: catalog-service
+    spec:
+      imagePullSecrets:
+        - name: dockerhub-secret
+      containers:
+        - name: catalog-service
+          image: isuruamarasooriya/catalog-service:latest
+          ports:
+            - containerPort: 5002
+          env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: mongo-uri
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"

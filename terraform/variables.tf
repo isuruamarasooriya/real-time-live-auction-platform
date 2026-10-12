@@ -9,3 +9,9 @@ variable "monitoring_namespace" {
   type        = string
   default     = "monitoring"
 }
+
+variable "mongodb_root_password" {
+  description = "Root password for MongoDB"
+  type        = string
+  sensitive   = true
+}
