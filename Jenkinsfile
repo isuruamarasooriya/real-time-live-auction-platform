@@ -1,10 +1,13 @@
 pipeline {
     agent any
     
+    parameters {
+        choice(name: 'SERVICE_NAME', choices: ['bidding-engine', 'auth-service', 'catalog-service', 'frontend'], description: 'Select the microservice to build and deploy')
+    }
+
     environment {
         GITHUB_REPO = 'isuruamarasooriya/real-time-live-auction-platform'
-        SERVICE_NAME = 'bidding-engine'
-        IMAGE_NAME = "isuruamarasooriya/${SERVICE_NAME}"
+        IMAGE_NAME = "isuruamarasooriya/${params.SERVICE_NAME}"
     }
 
     stages {
@@ -17,8 +20,8 @@ pipeline {
         stage('2. Build Docker Image') {
             steps {
                 script {
-                    echo "Building ${SERVICE_NAME} image..."
-                    sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ./${SERVICE_NAME}"
+                    echo "Building ${params.SERVICE_NAME} image..."
+                    sh "docker build -t ${IMAGE_NAME}:${BUILD_NUMBER} ./${params.SERVICE_NAME}"
                 }
             }
         }
@@ -46,8 +49,7 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-                        
-                        echo "Pushing ${SERVICE_NAME} to Docker Hub..."
+                        echo "Pushing ${params.SERVICE_NAME} to Docker Hub..."
                         sh "docker push ${IMAGE_NAME}:${BUILD_NUMBER}"
                     }
                 }
@@ -68,14 +70,14 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'GIT_PASS', usernameVariable: 'GIT_USER')]) {
                         echo "Updating Kubernetes manifests for GitOps..."
-                        sh "sed -i 's|image: .*/${SERVICE_NAME}:.*|image: ${IMAGE_NAME}:${BUILD_NUMBER}|g' k8s/${SERVICE_NAME}/deployment.yaml"
+                        sh "sed -i 's|image: .*/${params.SERVICE_NAME}:.*|image: ${IMAGE_NAME}:${BUILD_NUMBER}|g' k8s/${params.SERVICE_NAME}/deployment.yaml"
                         
                         sh """
                         git config user.name "Jenkins Pipeline"
                         git config user.email "jenkins@live-auction.com"
                         
-                        git add k8s/${SERVICE_NAME}/deployment.yaml
-                        git commit -m "chore: update ${SERVICE_NAME} image tag to \${BUILD_NUMBER} [skip ci]"
+                        git add k8s/${params.SERVICE_NAME}/deployment.yaml
+                        git commit -m "chore: update ${params.SERVICE_NAME} image tag to \${BUILD_NUMBER} [skip ci]"
                         git push https://\${GIT_USER}:\${GIT_PASS}@github.com/\${GITHUB_REPO}.git HEAD:main
                         """
                     }
