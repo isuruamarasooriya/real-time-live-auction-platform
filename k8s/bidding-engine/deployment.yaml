@@ -21,6 +21,12 @@ spec:
         image: isuruamarasooriya/bidding-engine:9
         ports:
         - containerPort: 5003
+        env:
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: db-secret
+                  key: mongo-uri
         resources:
           requests:
             memory: "128Mi"
