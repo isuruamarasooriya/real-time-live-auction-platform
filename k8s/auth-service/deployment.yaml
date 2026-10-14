@@ -18,7 +18,7 @@ spec:
         - name: dockerhub-secret
       containers:
         - name: auth-service
-          image: isuruamarasooriya/auth-service:latest
+          image: isuruamarasooriya/auth-service:3
           ports:
             - containerPort: 5001
           env:
