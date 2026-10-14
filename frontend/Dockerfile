@@ -1,4 +1,4 @@
-FROM node:18-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 ARG VITE_AUTH_SERVICE_URL
 ARG VITE_CATALOG_SERVICE_URL
