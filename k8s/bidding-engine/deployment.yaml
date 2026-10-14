@@ -15,22 +15,22 @@ spec:
         app: bidding-engine
     spec:
       imagePullSecrets:
-      - name: dockerhub-secret
+        - name: dockerhub-secret
       containers:
-      - name: bidding-engine
-        image: isuruamarasooriya/bidding-engine:2
-        ports:
-        - containerPort: 5003
-        env:
+        - name: bidding-engine
+          image: isuruamarasooriya/bidding-engine:2
+          ports:
+            - containerPort: 5003
+          env:
             - name: MONGO_URI
               valueFrom:
                 secretKeyRef:
                   name: db-secret
                   key: mongo-uri
-        resources:
-          requests:
-            memory: "128Mi"
-            cpu: "100m"
-          limits:
-            memory: "256Mi"
-            cpu: "300m"
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "300m"
