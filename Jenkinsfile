@@ -27,10 +27,14 @@ pipeline {
         }
 
        stage('3. Run Tests') {
-            steps {
-                script {
+        steps {
+            script {
+                if (params.SERVICE_NAME == 'frontend') {
+                    echo "Frontend tests are executed during the Docker build stage. Skipping here."
+                } else {
                     echo "Running unit tests inside the built image..."
                     sh "docker run --rm --user root -e NODE_ENV=development --entrypoint sh ${IMAGE_NAME}:${BUILD_NUMBER} -c 'npm install && npm test'"
+                    }
                 }
             }
         }

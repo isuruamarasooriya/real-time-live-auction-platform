@@ -9,6 +9,7 @@ ENV VITE_BIDDING_ENGINE_URL=$VITE_BIDDING_ENGINE_URL
 COPY package*.json ./
 RUN npm ci
 COPY . .
+RUN CI=true npm test
 RUN npm run build
 
 FROM nginx:alpine
