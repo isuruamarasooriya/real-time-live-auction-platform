@@ -29,19 +29,27 @@ pipeline {
             steps {
                 script {
                     if (params.SERVICE_NAME == 'auto-detect') {
-                        def changedFiles = sh(script: 'git log -m -1 --name-only --pretty="format:" HEAD', returnStdout: true).trim()
+                        def changedFilesLines = sh(script: 'git log -m -1 --name-only --pretty="format:" HEAD', returnStdout: true).trim().split('\n')
+                        def needsBuild = false
                         
-                        if (changedFiles.contains('bidding-engine/')) {
+                        if (changedFilesLines.any { it.startsWith('bidding-engine/') }) {
                             env.SERVICE_NAME = 'bidding-engine'
-                        } else if (changedFiles.contains('auth-service/')) {
+                            needsBuild = true
+                        } else if (changedFilesLines.any { it.startsWith('auth-service/') }) {
                             env.SERVICE_NAME = 'auth-service'
-                        } else if (changedFiles.contains('catalog-service/')) {
+                            needsBuild = true
+                        } else if (changedFilesLines.any { it.startsWith('catalog-service/') }) {
                             env.SERVICE_NAME = 'catalog-service'
-                        } else if (changedFiles.contains('frontend/')) {
+                            needsBuild = true
+                        } else if (changedFilesLines.any { it.startsWith('frontend/') }) {
                             env.SERVICE_NAME = 'frontend'
-                        } else {
-                            echo "No microservice changes detected. Defaulting to bidding-engine."
-                            env.SERVICE_NAME = 'bidding-engine' 
+                            needsBuild = true
+                        }
+                        
+                        if (!needsBuild) {
+                            echo "No microservice source code changes detected. Skipping build."
+                            currentBuild.result = 'SUCCESS'
+                            error("Skipped: No microservice code changes detected") 
                         }
                     } else {
                         env.SERVICE_NAME = params.SERVICE_NAME
