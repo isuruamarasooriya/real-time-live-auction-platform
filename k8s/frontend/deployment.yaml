@@ -18,7 +18,7 @@ spec:
         - name: dockerhub-secret
       containers:
         - name: frontend
-          image: isuruamarasooriya/frontend:15
+          image: isuruamarasooriya/frontend:16
           ports:
             - containerPort: 3000
           resources:
