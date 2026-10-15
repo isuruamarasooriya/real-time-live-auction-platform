@@ -13,3 +13,4 @@ resources:
   - frontend/deployment.yaml
   - frontend/service.yaml
   - shared/db-sealed-secret.yaml
+  - shared/ingress.yaml
