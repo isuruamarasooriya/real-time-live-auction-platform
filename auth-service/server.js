@@ -1,3 +1,6 @@
+const crypto = require('crypto');
+globalThis.crypto = crypto;
+
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
