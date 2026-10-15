@@ -12,3 +12,4 @@ resources:
   - catalog-service/hpa.yaml
   - frontend/deployment.yaml
   - frontend/service.yaml
+  - shared/db-sealed-secret.yaml
