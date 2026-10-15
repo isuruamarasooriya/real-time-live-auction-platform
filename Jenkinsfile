@@ -13,6 +13,15 @@ pipeline {
         stage('1. Checkout Code') {
             steps {
                 checkout scm
+                script {
+                    def commitMessage = sh(script: 'git log -1 --pretty=%B HEAD', returnStdout: true).trim()
+                    
+                    if (commitMessage.contains('[skip ci]')) {
+                        echo "Automated commit by Jenkins detected ([skip ci]). Stopping pipeline to prevent infinite loop!"
+                        currentBuild.result = 'SUCCESS'
+                        error("Skipped due to [skip ci]")
+                    }
+                }
             }
         }
 
