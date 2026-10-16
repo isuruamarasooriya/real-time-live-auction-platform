@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     parameters {
-        choice(name: 'SERVICE_NAME', choices: ['auto-detect', 'bidding-engine', 'auth-service', 'catalog-service', 'frontend'], description: 'Select the microservice to build, or let it auto-detect for webhooks')
+        choice(name: 'SERVICE_NAME', choices: ['auto-detect', 'bidding-engine', 'auth-service', 'catalog-service', 'frontend', 'all'], description: 'Select the microservice to build, or let it auto-detect for webhooks')
     }
 
     environment {
@@ -28,37 +28,31 @@ pipeline {
         stage('2. Detect Changes (Auto-Detect)') {
             steps {
                 script {
+                    def changedServices = []
+                    
                     if (params.SERVICE_NAME == 'auto-detect') {
                         def changedFilesLines = sh(script: 'git log -m -1 --name-only --pretty="format:" HEAD', returnStdout: true).trim().split('\n')
-                        def needsBuild = false
+                        def allServices = ['bidding-engine', 'auth-service', 'catalog-service', 'frontend']
                         
-                        if (changedFilesLines.any { it.startsWith('bidding-engine/') }) {
-                            env.SERVICE_NAME = 'bidding-engine'
-                            needsBuild = true
-                        } else if (changedFilesLines.any { it.startsWith('auth-service/') }) {
-                            env.SERVICE_NAME = 'auth-service'
-                            needsBuild = true
-                        } else if (changedFilesLines.any { it.startsWith('catalog-service/') }) {
-                            env.SERVICE_NAME = 'catalog-service'
-                            needsBuild = true
-                        } else if (changedFilesLines.any { it.startsWith('frontend/') }) {
-                            env.SERVICE_NAME = 'frontend'
-                            needsBuild = true
+                        for (svc in allServices) {
+                            if (changedFilesLines.any { it.startsWith("${svc}/") }) {
+                                changedServices.add(svc)
+                            }
                         }
-                        
-                        if (!needsBuild) {
-                            echo "No microservice source code changes detected. Skipping build."
-                            currentBuild.result = 'SUCCESS'
-                            error("Skipped: No microservice code changes detected") 
-                        }
+                    } else if (params.SERVICE_NAME == 'all') {
+                        changedServices = ['bidding-engine', 'auth-service', 'catalog-service', 'frontend']
                     } else {
-                        env.SERVICE_NAME = params.SERVICE_NAME
+                        changedServices.add(params.SERVICE_NAME)
                     }
                     
-                    env.IMAGE_NAME = "isuruamarasooriya/${env.SERVICE_NAME}"
+                    if (changedServices.isEmpty()) {
+                        echo "No microservice source code changes detected. Skipping build."
+                        currentBuild.result = 'SUCCESS'
+                        error("Skipped: No microservice code changes detected") 
+                    }
                     
-                    echo "Target Microservice: ${env.SERVICE_NAME}"
-                    echo "Target Image: ${env.IMAGE_NAME}"
+                    env.CHANGED_SERVICES = changedServices.join(',')
+                    echo "Target Microservices to Build: ${env.CHANGED_SERVICES}"
                 }
             }
         }
@@ -66,8 +60,12 @@ pipeline {
         stage('3. Build Docker Image') {
             steps {
                 script {
-                    echo "Building ${env.SERVICE_NAME} image..."
-                    sh "docker build -t ${env.IMAGE_NAME}:${BUILD_NUMBER} ./${env.SERVICE_NAME}"
+                    def services = env.CHANGED_SERVICES.split(',')
+                    for (svc in services) {
+                        def imageName = "isuruamarasooriya/${svc}"
+                        echo "Building ${svc} image..."
+                        sh "docker build -t ${imageName}:${BUILD_NUMBER} ./${svc}"
+                    }
                 }
             }
         }
@@ -75,11 +73,15 @@ pipeline {
         stage('4. Run Tests') {
             steps {
                 script {
-                    if (env.SERVICE_NAME == 'frontend') {
-                        echo "Frontend tests are executed during the Docker build stage. Skipping here."
-                    } else {
-                        echo "Running unit tests inside the built image..."
-                        sh "docker run --rm --user root -e NODE_ENV=development --entrypoint sh ${env.IMAGE_NAME}:${BUILD_NUMBER} -c 'npm install && npm test'"
+                    def services = env.CHANGED_SERVICES.split(',')
+                    for (svc in services) {
+                        def imageName = "isuruamarasooriya/${svc}"
+                        if (svc == 'frontend') {
+                            echo "Frontend tests are executed during the Docker build stage. Skipping here."
+                        } else {
+                            echo "Running unit tests inside the built image for ${svc}..."
+                            sh "docker run --rm --user root -e NODE_ENV=development --entrypoint sh ${imageName}:${BUILD_NUMBER} -c 'npm install && npm test'"
+                        }
                     }
                 }
             }
@@ -88,8 +90,12 @@ pipeline {
         stage('5. Trivy Security Scanning') {
             steps {
                 script {
-                    echo "Running Trivy Security Scanner..."
-                    sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL --no-progress ${env.IMAGE_NAME}:${BUILD_NUMBER}"
+                    def services = env.CHANGED_SERVICES.split(',')
+                    for (svc in services) {
+                        def imageName = "isuruamarasooriya/${svc}"
+                        echo "Running Trivy Security Scanner for ${svc}..."
+                        sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL --no-progress ${imageName}:${BUILD_NUMBER}"
+                    }
                 }
             }
         }
@@ -99,8 +105,13 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
                         sh 'echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin'
-                        echo "Pushing ${env.SERVICE_NAME} to Docker Hub..."
-                        sh "docker push ${env.IMAGE_NAME}:${BUILD_NUMBER}"
+                        
+                        def services = env.CHANGED_SERVICES.split(',')
+                        for (svc in services) {
+                            def imageName = "isuruamarasooriya/${svc}"
+                            echo "Pushing ${svc} to Docker Hub..."
+                            sh "docker push ${imageName}:${BUILD_NUMBER}"
+                        }
                     }
                 }
             }
@@ -109,8 +120,12 @@ pipeline {
         stage('7. Clean Up Local Images') {
             steps {
                 script {
-                    echo "Cleaning up local docker images..."
-                    sh "docker rmi ${env.IMAGE_NAME}:${BUILD_NUMBER} || true"
+                    def services = env.CHANGED_SERVICES.split(',')
+                    for (svc in services) {
+                        def imageName = "isuruamarasooriya/${svc}"
+                        echo "Cleaning up local docker images for ${svc}..."
+                        sh "docker rmi ${imageName}:${BUILD_NUMBER} || true"
+                    }
                 }
             }
         }
@@ -120,15 +135,21 @@ pipeline {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'GIT_PASS', usernameVariable: 'GIT_USER')]) {
                         echo "Updating Kubernetes manifests for GitOps..."
-                        sh "sed -i 's|image: .*/${env.SERVICE_NAME}:.*|image: ${env.IMAGE_NAME}:${BUILD_NUMBER}|g' k8s/${env.SERVICE_NAME}/deployment.yaml"
                         
+                        sh 'git config user.name "Jenkins Pipeline"'
+                        sh 'git config user.email "jenkins@live-auction.com"'
+                        
+                        def services = env.CHANGED_SERVICES.split(',')
+                        for (svc in services) {
+                            def imageName = "isuruamarasooriya/${svc}"
+                            sh "sed -i 's|image: .*/${svc}:.*|image: ${imageName}:${BUILD_NUMBER}|g' k8s/${svc}/deployment.yaml"
+                            sh "git add k8s/${svc}/deployment.yaml"
+                        }
+                        
+                        def commitMsg = "chore: update images for ${env.CHANGED_SERVICES} to tag ${BUILD_NUMBER} [skip ci]"
                         sh """
-                        git config user.name "Jenkins Pipeline"
-                        git config user.email "jenkins@live-auction.com"
-                        
-                        git add k8s/${env.SERVICE_NAME}/deployment.yaml
-                        git commit -m "chore: update ${env.SERVICE_NAME} image tag to \${BUILD_NUMBER} [skip ci]" || echo "No changes to commit"
-                        git push https://\${GIT_USER}:\${GIT_PASS}@github.com/\${GITHUB_REPO}.git HEAD:main
+                        git commit -m "${commitMsg}" || echo "No changes to commit"
+                        git push https://${GIT_USER}:${GIT_PASS}@github.com/${GITHUB_REPO}.git HEAD:main
                         """
                     }
                 }
