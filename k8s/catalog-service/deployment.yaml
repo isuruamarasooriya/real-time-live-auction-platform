@@ -18,7 +18,7 @@ spec:
         - name: dockerhub-secret
       containers:
         - name: catalog-service
-          image: isuruamarasooriya/catalog-service:29
+          image: isuruamarasooriya/catalog-service:41
           ports:
             - containerPort: 5002
           env:
