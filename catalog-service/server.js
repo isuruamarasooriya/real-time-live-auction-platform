@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const crypto = require('crypto');
+globalThis.crypto = crypto;
 require('dotenv').config();
 
 const app = express();
