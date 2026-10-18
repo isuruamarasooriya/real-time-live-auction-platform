@@ -27,6 +27,15 @@ spec:
                 secretKeyRef:
                   name: db-secret
                   key: mongo-uri
+            - name: REDIS_HOST
+              value: "redis-master"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis
+                  key: redis-password
           resources:
             requests:
               memory: "128Mi"

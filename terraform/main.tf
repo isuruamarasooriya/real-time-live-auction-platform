@@ -138,3 +138,27 @@ resource "helm_release" "mongodb" {
     value = "1Gi"
   }
 }
+
+# 8. Install Redis via Helm
+resource "helm_release" "redis" {
+  name       = "redis"
+  repository = "https://charts.bitnami.com/bitnami"
+  chart      = "redis"
+  version    = "18.6.1"
+  namespace  = "default"
+
+  set {
+    name  = "image.tag"
+    value = "latest" 
+  }
+
+  set {
+    name  = "architecture"
+    value = "standalone"
+  }
+
+  set {
+    name  = "auth.password"
+    value = var.redis_password
+  }
+}

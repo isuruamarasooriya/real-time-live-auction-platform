@@ -27,3 +27,9 @@ variable "grafana_admin_password" {
   type        = string
   sensitive   = true
 }
+
+variable "redis_password" {
+  description = "Password for Redis server"
+  type        = string
+  sensitive   = true
+}
