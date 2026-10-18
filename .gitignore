@@ -47,3 +47,4 @@ terraform.rc
 
 kubeseal.exe
 db-secret.yaml
+auth-secret.yaml

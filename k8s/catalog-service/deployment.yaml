@@ -27,6 +27,18 @@ spec:
                 secretKeyRef:
                   name: db-secret
                   key: mongo-uri
+          livenessProbe:
+            httpGet:
+              path: /api/catalog/health
+              port: 5002
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/catalog/health
+              port: 5002
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             requests:
               memory: "128Mi"

@@ -27,6 +27,23 @@ spec:
                 secretKeyRef:
                   name: db-secret
                   key: mongo-uri
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: jwt-secret
+          livenessProbe:
+            httpGet:
+              path: /api/auth/health
+              port: 5001
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /api/auth/health
+              port: 5001
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             requests:
               memory: "128Mi"

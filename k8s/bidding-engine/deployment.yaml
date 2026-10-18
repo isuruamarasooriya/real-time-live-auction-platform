@@ -36,6 +36,21 @@ spec:
                 secretKeyRef:
                   name: redis
                   key: redis-password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: auth-secret
+                  key: jwt-secret
+          livenessProbe:
+            tcpSocket:
+              port: 5003
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: 5003
+            initialDelaySeconds: 5
+            periodSeconds: 5
           resources:
             requests:
               memory: "128Mi"

@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const mongoose = require('mongoose');
 const { createClient } = require('redis');
 const { createAdapter } = require('@socket.io/redis-adapter');
+const jwt = require('jsonwebtoken');
 require('dotenv').config();
 globalThis.crypto = crypto;
 
@@ -62,29 +63,47 @@ app.post('/api/bidding/health-stress', (req, res) => {
   res.status(200).json({ message: 'Stress test endpoint hit!' });
 });
 
+io.use((socket, next) => {
+  const token = socket.handshake.auth?.token;
+  if (!token) return next(new Error('Authentication error: Token is missing'));
+  if (!process.env.JWT_SECRET) return next(new Error('Server error: JWT_SECRET missing'));
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+    if (err) return next(new Error('Authentication error: Invalid token'));
+    socket.username = decoded.username;
+    next();
+  });
+});
+
 io.on('connection', (socket) => {
-  console.log('New User connected:', socket.id);
+  console.log(`User connected: ${socket.username} (Socket ID: ${socket.id})`);
 
   socket.on('placeBid', async (data) => {
     try {
-      console.log('New Bid Received:', data);
+      const secureData = {
+        itemId: data.itemId,
+        bidAmount: data.bidAmount,
+        username: socket.username
+      };
+      
+      console.log('Secure Bid Received:', secureData);
 
-      const newBid = new Bid(data);
+      const newBid = new Bid(secureData);
       await newBid.save();
 
       await Item.findOneAndUpdate(
-        { id: data.itemId },
-        { currentBid: data.bidAmount }
+        { id: secureData.itemId },
+        { currentBid: secureData.bidAmount }
       );
 
-      io.emit('bidUpdated', data);
+      io.emit('bidUpdated', secureData);
     } catch (error) {
       console.error('Error saving bid:', error);
     }
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log(`User disconnected: ${socket.username}`);
   });
 });
 

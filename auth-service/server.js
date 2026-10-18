@@ -3,6 +3,7 @@ globalThis.crypto = crypto;
 
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const cors = require('cors');
 const mongoose = require('mongoose');
 require('dotenv').config();
@@ -25,7 +26,10 @@ const User = mongoose.model('User', UserSchema);
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const newUser = new User({ username, password });
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newUser = new User({ username, password: hashedPassword });
     await newUser.save();
     res.status(201).json({ message: 'User registered successfully' });
   } catch (error) {
@@ -36,10 +40,13 @@ app.post('/api/auth/register', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { username, password } = req.body;
-    const user = await User.findOne({ username, password });
+    const user = await User.findOne({ username });
 
-    if (user) {
-      const token = jwt.sign({ username }, process.env.JWT_SECRET || 'secret123', { expiresIn: '1h' });
+    if (user && (await bcrypt.compare(password, user.password))) {
+      if (!process.env.JWT_SECRET) {
+        return res.status(500).json({ message: 'Internal server error' });
+      }
+      const token = jwt.sign({ username }, process.env.JWT_SECRET, { expiresIn: '1h' });
       res.json({ token });
     } else {
       res.status(401).json({ message: 'Invalid credentials' });
