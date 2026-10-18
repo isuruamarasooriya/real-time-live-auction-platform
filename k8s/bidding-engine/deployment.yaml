@@ -18,7 +18,7 @@ spec:
         - name: dockerhub-secret
       containers:
         - name: bidding-engine
-          image: isuruamarasooriya/bidding-engine:38
+          image: isuruamarasooriya/bidding-engine:45
           ports:
             - containerPort: 5003
           env:
