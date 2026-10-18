@@ -47,6 +47,15 @@ resource "helm_release" "prometheus_grafana" {
     name  = "alertmanager.enabled"
     value = "false"
   }
+
+  set {
+    name  = "grafana.adminUser"
+    value = var.grafana_admin_user
+  }
+  set {
+    name  = "grafana.adminPassword"
+    value = var.grafana_admin_password
+  }
 }
 
 # 5. Install Metrics Server
