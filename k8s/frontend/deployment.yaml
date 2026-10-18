@@ -18,7 +18,7 @@ spec:
         - name: dockerhub-secret
       containers:
         - name: frontend
-          image: isuruamarasooriya/frontend:18
+          image: isuruamarasooriya/frontend:50
           ports:
             - containerPort: 80
           livenessProbe:
