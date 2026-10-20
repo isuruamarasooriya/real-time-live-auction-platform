@@ -94,7 +94,7 @@ pipeline {
                     for (svc in services) {
                         def imageName = "isuruamarasooriya/${svc}"
                         echo "Running Trivy Security Scanner for ${svc}..."
-                        sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL --no-progress ${imageName}:${BUILD_NUMBER}"
+                        sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --exit-code 1 --severity HIGH,CRITICAL --no-progress ${imageName}:${BUILD_NUMBER}"
                     }
                 }
             }
