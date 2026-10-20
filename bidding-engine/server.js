@@ -58,6 +58,8 @@ Promise.all([pubClient.connect(), subClient.connect()])
     console.error('Redis Adapter connection error:', err);
   });
 
+
+//Simulates CPU load to trigger Kubernetes HPA scaling during testing.(not for production)
 app.post('/api/bidding/health-stress', (req, res) => {
   for (let i = 0; i < 5000000; i++) {}
   res.status(200).json({ message: 'Stress test endpoint hit!' });
