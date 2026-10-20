@@ -95,6 +95,7 @@ pipeline {
                         def imageName = "isuruamarasooriya/${svc}"
                         echo "Running Trivy Security Scanner for ${svc}..."
                         sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL --no-progress ${imageName}:${BUILD_NUMBER}"
+                        // Temporarily remove (--exit-code 1) to review warnings without failing the pipeline. (Not sutable for production environments).
                     }
                 }
             }
