@@ -19,7 +19,7 @@ pipeline {
                     if (commitMessage.contains('[skip ci]')) {
                         echo "Automated commit by Jenkins detected ([skip ci]). Stopping pipeline to prevent infinite loop!"
                         currentBuild.result = 'SUCCESS'
-                        error("Skipped due to [skip ci]")
+                        return
                     }
                 }
             }
@@ -48,7 +48,7 @@ pipeline {
                     if (changedServices.isEmpty()) {
                         echo "No microservice source code changes detected. Skipping build."
                         currentBuild.result = 'SUCCESS'
-                        error("Skipped: No microservice code changes detected") 
+                        return
                     }
                     
                     env.CHANGED_SERVICES = changedServices.join(',')
