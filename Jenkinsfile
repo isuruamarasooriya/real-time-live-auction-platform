@@ -18,6 +18,7 @@ pipeline {
                     
                     if (commitMessage.contains('[skip ci]')) {
                         echo "Automated commit by Jenkins detected ([skip ci]). Stopping pipeline to prevent infinite loop!"
+                        env.SKIP_CI = 'true'
                         currentBuild.result = 'SUCCESS'
                         return
                     }
@@ -26,6 +27,7 @@ pipeline {
         }
 
         stage('2. Detect Changes (Auto-Detect)') {
+            when { expression { env.SKIP_CI != 'true' } }
             steps {
                 script {
                     def changedServices = []
@@ -47,6 +49,7 @@ pipeline {
                     
                     if (changedServices.isEmpty()) {
                         echo "No microservice source code changes detected. Skipping build."
+                        env.CHANGED_SERVICES = ''
                         currentBuild.result = 'SUCCESS'
                         return
                     }
@@ -58,6 +61,7 @@ pipeline {
         }
 
         stage('3. Build Docker Image') {
+            when { expression { env.CHANGED_SERVICES } }
             steps {
                 script {
                     def services = env.CHANGED_SERVICES.split(',')
@@ -71,6 +75,7 @@ pipeline {
         }
 
         stage('4. Run Tests') {
+            when { expression { env.CHANGED_SERVICES } }
             steps {
                 script {
                     def services = env.CHANGED_SERVICES.split(',')
@@ -88,6 +93,7 @@ pipeline {
         }
 
         stage('5. Trivy Security Scanning') {
+            when { expression { env.CHANGED_SERVICES } }
             steps {
                 script {
                     def services = env.CHANGED_SERVICES.split(',')
@@ -102,6 +108,7 @@ pipeline {
         }
 
         stage('6. Push to Docker Hub') {
+            when { expression { env.CHANGED_SERVICES } }
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', passwordVariable: 'DOCKER_PASS', usernameVariable: 'DOCKER_USER')]) {
@@ -119,6 +126,7 @@ pipeline {
         }
 
         stage('7. Clean Up Local Images') {
+            when { expression { env.CHANGED_SERVICES } }
             steps {
                 script {
                     def services = env.CHANGED_SERVICES.split(',')
@@ -132,6 +140,7 @@ pipeline {
         }
 
         stage('8. GitOps Deployment') {
+            when { expression { env.CHANGED_SERVICES } }
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-creds', passwordVariable: 'GIT_PASS', usernameVariable: 'GIT_USER')]) {
