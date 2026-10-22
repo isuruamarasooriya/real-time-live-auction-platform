@@ -14,6 +14,7 @@ resources:
   - frontend/service.yaml
   - shared/db-sealed-secret.yaml
   - shared/auth-sealed-secret.yaml
+  - shared/dockerhub-sealed-secret.yaml
   - shared/ingress.yaml
   - shared/mongodb-sealed-secret.yaml
   - shared/redis-sealed-secret.yaml
