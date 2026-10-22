@@ -48,3 +48,7 @@ terraform.rc
 kubeseal.exe
 db-secret.yaml
 auth-secret.yaml
+
+mongodb-secret.yaml
+redis-secret.yaml
+grafana-secret.yaml

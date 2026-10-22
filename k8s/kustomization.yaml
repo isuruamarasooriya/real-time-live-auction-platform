@@ -15,3 +15,6 @@ resources:
   - shared/db-sealed-secret.yaml
   - shared/auth-sealed-secret.yaml
   - shared/ingress.yaml
+  - shared/mongodb-sealed-secret.yaml
+  - shared/redis-sealed-secret.yaml
+  - shared/grafana-sealed-secret.yaml

@@ -49,12 +49,16 @@ resource "helm_release" "prometheus_grafana" {
   }
 
   set {
-    name  = "grafana.adminUser"
-    value = var.grafana_admin_user
+    name  = "grafana.admin.existingSecret"
+    value = "grafana-auth-secret"
   }
   set {
-    name  = "grafana.adminPassword"
-    value = var.grafana_admin_password
+    name  = "grafana.admin.userKey"
+    value = "admin-user"
+  }
+  set {
+    name  = "grafana.admin.passwordKey"
+    value = "admin-password"
   }
 }
 
@@ -109,18 +113,13 @@ resource "helm_release" "mongodb" {
   }
 
   set {
-    name  = "auth.rootPassword"
-    value = var.mongodb_root_password
+    name  = "auth.existingSecret"
+    value = "mongodb-auth-secret"
   }
 
   set {
     name  = "auth.usernames[0]"
     value = "admin"
-  }
-
-  set {
-    name  = "auth.passwords[0]"
-    value = var.mongodb_root_password
   }
 
   set {
@@ -158,7 +157,11 @@ resource "helm_release" "redis" {
   }
 
   set {
-    name  = "auth.password"
-    value = var.redis_password
+    name  = "auth.existingSecret"
+    value = "redis-auth-secret"
+  }
+  set {
+    name  = "auth.existingSecretPasswordKey"
+    value = "redis-password"
   }
 }
