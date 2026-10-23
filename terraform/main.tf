@@ -92,6 +92,29 @@ resource "helm_release" "prometheus_adapter" {
     name  = "prometheus.port"
     value = "9090"
   }
+
+  values = [
+    yamlencode({
+      rules = {
+        custom = [
+          {
+            seriesQuery = "http_requests_total{namespace!=\"\",pod!=\"\"}"
+            resources = {
+              overrides = {
+                namespace = { resource = "namespace" }
+                pod       = { resource = "pod" }
+              }
+            }
+            name = {
+              matches = "http_requests_total"
+              as      = "http_requests_per_second"
+            }
+            metricsQuery = "sum(rate(<<.Series>>{<<.LabelMatchers>>}[2m])) by (<<.GroupBy>>)"
+          }
+        ]
+      }
+    })
+  ]
 }
 
 # 7. Install MongoDB via Helm
