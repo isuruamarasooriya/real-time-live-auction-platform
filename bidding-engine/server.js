@@ -14,6 +14,38 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+// --- Prometheus setup Start ---
+const promClient = require('prom-client');
+
+promClient.collectDefaultMetrics();
+
+// Create a custom counter for HTTP requests
+const httpRequestsTotal = new promClient.Counter({
+  name: 'http_requests_total',
+  help: 'Total number of HTTP requests',
+  labelNames: ['method', 'route', 'status_code']
+});
+
+// Middleware to count each HTTP request
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    if (req.path !== '/metrics') {
+      httpRequestsTotal.inc({
+        method: req.method,
+        route: req.path,
+        status_code: res.statusCode
+      });
+    }
+  });
+  next();
+});
+
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', promClient.register.contentType);
+  res.end(await promClient.register.metrics());
+});
+// --- Prometheus Setup End ---
+
 const MONGO_URI = process.env.MONGO_URI;
 mongoose.connect(MONGO_URI)
   .then(() => console.log('Bidding Engine connected to MongoDB'))
@@ -57,7 +89,6 @@ Promise.all([pubClient.connect(), subClient.connect()])
   .catch(err => {
     console.error('Redis Adapter connection error:', err);
   });
-
 
 //Simulates CPU load to trigger Kubernetes HPA scaling during testing.(not for production)
 app.post('/api/bidding/health-stress', (req, res) => {
@@ -111,5 +142,3 @@ io.on('connection', (socket) => {
 
 const PORT = process.env.PORT || 5003;
 server.listen(PORT, () => console.log(`Bidding Engine running on port ${PORT}`));
-
-//test
