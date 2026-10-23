@@ -6,7 +6,8 @@ spec:
   selector:
     app: bidding-engine
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 5003
   type: ClusterIP
