@@ -129,35 +129,54 @@ resource "helm_release" "mongodb" {
     name  = "image.tag"
     value = "latest" 
   }
-
   set {
     name  = "architecture"
     value = "standalone"
   }
-
   set {
     name  = "auth.existingSecret"
     value = "mongodb-auth-secret"
   }
-
   set {
     name  = "auth.usernames[0]"
     value = "admin"
   }
-
   set {
     name  = "auth.databases[0]"
     value = "auction_db"
   }
-
   set {
     name  = "persistence.enabled"
     value = "true"
   }
-
   set {
     name  = "persistence.size"
     value = "1Gi"
+  }
+
+  set {
+    name  = "readinessProbe.initialDelaySeconds"
+    value = "30"
+  }
+  set {
+    name  = "readinessProbe.timeoutSeconds"
+    value = "15"
+  }
+  set {
+    name  = "readinessProbe.periodSeconds"
+    value = "20"
+  }
+  set {
+    name  = "livenessProbe.initialDelaySeconds"
+    value = "60"
+  }
+  set {
+    name  = "livenessProbe.timeoutSeconds"
+    value = "15"
+  }
+  set {
+    name  = "livenessProbe.periodSeconds"
+    value = "20"
   }
 }
 
