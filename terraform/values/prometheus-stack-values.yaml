@@ -1,0 +1,15 @@
+prometheus:
+  prometheusSpec:
+    resources:
+      limits:
+        memory: "512Mi"
+grafana:
+  resources:
+    limits:
+      memory: "256Mi"
+  admin:
+    existingSecret: "grafana-auth-secret"
+    userKey: "admin-user"
+    passwordKey: "admin-password"
+alertmanager:
+  enabled: false

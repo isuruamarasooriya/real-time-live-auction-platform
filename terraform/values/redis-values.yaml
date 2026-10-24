@@ -1,0 +1,6 @@
+image:
+  tag: "latest"
+architecture: "standalone"
+auth:
+  existingSecret: "redis-auth-secret"
+  existingSecretPasswordKey: "redis-password"

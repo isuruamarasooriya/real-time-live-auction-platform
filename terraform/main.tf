@@ -34,32 +34,9 @@ resource "helm_release" "prometheus_grafana" {
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
   version    = "51.2.0"
 
-  set {
-    name  = "prometheus.prometheusSpec.resources.limits.memory"
-    value = "512Mi"
-  }
-  set {
-    name  = "grafana.resources.limits.memory"
-    value = "256Mi"
-  }
-  
-  set {
-    name  = "alertmanager.enabled"
-    value = "false"
-  }
-
-  set {
-    name  = "grafana.admin.existingSecret"
-    value = "grafana-auth-secret"
-  }
-  set {
-    name  = "grafana.admin.userKey"
-    value = "admin-user"
-  }
-  set {
-    name  = "grafana.admin.passwordKey"
-    value = "admin-password"
-  }
+  values = [
+    file("values/prometheus-stack-values.yaml")
+  ]
 }
 
 # 5. Install Metrics Server
@@ -84,35 +61,9 @@ resource "helm_release" "prometheus_adapter" {
   namespace  = kubernetes_namespace.monitoring.metadata[0].name
   version    = "4.10.0"
 
-  set {
-    name  = "prometheus.url"
-    value = "http://prometheus-stack-kube-prom-prometheus.${kubernetes_namespace.monitoring.metadata[0].name}.svc.cluster.local"
-  }
-  set {
-    name  = "prometheus.port"
-    value = "9090"
-  }
-
   values = [
-    yamlencode({
-      rules = {
-        custom = [
-          {
-            seriesQuery = "http_requests_total{namespace!=\"\",pod!=\"\"}"
-            resources = {
-              overrides = {
-                namespace = { resource = "namespace" }
-                pod       = { resource = "pod" }
-              }
-            }
-            name = {
-              matches = "http_requests_total"
-              as      = "http_requests_per_second"
-            }
-            metricsQuery = "sum(rate(<<.Series>>{<<.LabelMatchers>>}[2m])) by (<<.GroupBy>>)"
-          }
-        ]
-      }
+    templatefile("values/prometheus-adapter-values.yaml", { 
+      namespace = kubernetes_namespace.monitoring.metadata[0].name 
     })
   ]
 }
@@ -125,59 +76,9 @@ resource "helm_release" "mongodb" {
   version    = "15.0.0"
   namespace  = "default"
 
-  set {
-    name  = "image.tag"
-    value = "latest" 
-  }
-  set {
-    name  = "architecture"
-    value = "standalone"
-  }
-  set {
-    name  = "auth.existingSecret"
-    value = "mongodb-auth-secret"
-  }
-  set {
-    name  = "auth.usernames[0]"
-    value = "admin"
-  }
-  set {
-    name  = "auth.databases[0]"
-    value = "auction_db"
-  }
-  set {
-    name  = "persistence.enabled"
-    value = "true"
-  }
-  set {
-    name  = "persistence.size"
-    value = "1Gi"
-  }
-
-  set {
-    name  = "readinessProbe.initialDelaySeconds"
-    value = "30"
-  }
-  set {
-    name  = "readinessProbe.timeoutSeconds"
-    value = "15"
-  }
-  set {
-    name  = "readinessProbe.periodSeconds"
-    value = "20"
-  }
-  set {
-    name  = "livenessProbe.initialDelaySeconds"
-    value = "60"
-  }
-  set {
-    name  = "livenessProbe.timeoutSeconds"
-    value = "15"
-  }
-  set {
-    name  = "livenessProbe.periodSeconds"
-    value = "20"
-  }
+  values = [
+    file("values/mongodb-values.yaml")
+  ]
 }
 
 # 8. Install Redis via Helm
@@ -188,22 +89,7 @@ resource "helm_release" "redis" {
   version    = "18.6.1"
   namespace  = "default"
 
-  set {
-    name  = "image.tag"
-    value = "latest" 
-  }
-
-  set {
-    name  = "architecture"
-    value = "standalone"
-  }
-
-  set {
-    name  = "auth.existingSecret"
-    value = "redis-auth-secret"
-  }
-  set {
-    name  = "auth.existingSecretPasswordKey"
-    value = "redis-password"
-  }
+  values = [
+    file("values/redis-values.yaml")
+  ]
 }

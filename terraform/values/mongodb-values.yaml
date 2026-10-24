@@ -1,0 +1,20 @@
+image:
+  tag: "latest"
+architecture: "standalone"
+auth:
+  existingSecret: "mongodb-auth-secret"
+  usernames: 
+    - "admin"
+  databases: 
+    - "auction_db"
+persistence:
+  enabled: true
+  size: "1Gi"
+readinessProbe:
+  initialDelaySeconds: 30
+  timeoutSeconds: 15
+  periodSeconds: 20
+livenessProbe:
+  initialDelaySeconds: 60
+  timeoutSeconds: 15
+  periodSeconds: 20
