@@ -8,6 +8,7 @@ resources:
   - bidding-engine/service.yaml
   - bidding-engine/hpa.yaml
   - bidding-engine/servicemonitor.yaml
+  - bidding-engine/grafana-dashboard.yaml
   - catalog-service/deployment.yaml
   - catalog-service/service.yaml
   - catalog-service/hpa.yaml
