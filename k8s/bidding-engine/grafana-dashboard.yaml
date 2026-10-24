@@ -15,7 +15,7 @@ data:
           "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
           "targets": [
             {
-              "expr": "sum(rate(http_requests_total{app=\"bidding-engine\"}[5m]))",
+              "expr": "sum(rate(http_requests_total{container=\"bidding-engine\"}[5m]))",
               "legendFormat": "Request Rate"
             }
           ]
