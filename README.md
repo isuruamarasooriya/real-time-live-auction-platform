@@ -107,3 +107,6 @@ kubectl get hpa bidding-engine-hpa -w
 
 ### Continuous Deployment & GitOps (ArgoCD)
 ![ArgoCD Dashboard](./images/argocd-dashboard.png)
+
+### 3. HPA Autoscaling in Action (Load Testing)
+![HPA Scaling](./images/hpa-scaling.jpg)
