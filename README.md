@@ -1,22 +1,22 @@
-# Real-Time Live Auction Platform 🚀
+# GitOps & CI/CD Implementation for a Live Auction Platform 🚀
 
-An enterprise-grade, cloud-native microservices application demonstrating a complete end-to-end GitOps workflow, CI/CD automation, and custom metric-based autoscaling on Kubernetes. 
+This repository showcases the **DevOps, CI/CD, and Kubernetes deployment architecture** for a Real-Time Live Auction Platform. 
 
-This project simulates a real-time bidding environment utilizing WebSockets, distributed databases, and modern DevOps practices to ensure high availability, security, and scalability.
+The primary focus of this project is to demonstrate an enterprise-grade cloud-native deployment lifecycle, applying modern DevOps practices—including GitOps, custom metric autoscaling, and stateful traffic management—to a distributed microservices environment.
 
 ## ✨ Architecture & Tech Stack
 
 The infrastructure and application lifecycle are entirely automated using the principles of Infrastructure as Code (IaC) and GitOps.
 
-*   **Application Layer:** Node.js (Express), React, Socket.io
-*   **Data Layer:** MongoDB (Persistent Storage), Redis (Pub/Sub Adapter for WebSockets)
-*   **Containerization & Orchestration:** Docker, Kubernetes (Minikube)
-*   **Infrastructure as Code (IaC):** Terraform, Helm
-*   **CI/CD Pipeline:** Jenkins (Groovy Pipeline), GitHub Webhooks
-*   **GitOps Continuous Deployment:** ArgoCD
-*   **Security:** Trivy (Container Vulnerability Scanning), Kubernetes Sealed Secrets
-*   **Routing & Networking:** NGINX Ingress Controller
-*   **Observability & Autoscaling:** Prometheus, Grafana, Prometheus Adapter, Metrics Server, Horizontal Pod Autoscaler (HPA)
+-   **Application Layer:** Node.js (Express), React, Socket.io
+-   **Data Layer:** MongoDB (Persistent Storage), Redis (Pub/Sub Adapter for WebSockets)
+-   **Containerization & Orchestration:** Docker, Kubernetes (Minikube)
+-   **Infrastructure as Code (IaC):** Terraform, Helm
+-   **CI/CD Pipeline:** Jenkins (Groovy Pipeline), GitHub Webhooks
+-   **GitOps Continuous Deployment:** ArgoCD
+-   **Security:** Trivy (Container Vulnerability Scanning), Kubernetes Sealed Secrets
+-   **Routing & Networking:** NGINX Ingress Controller
+-   **Observability & Autoscaling:** Prometheus, Grafana, Prometheus Adapter, Metrics Server, Horizontal Pod Autoscaler (HPA)
 
 ![Architecture Diagram](./images/architecture-diagram.jpg)
 
@@ -31,8 +31,8 @@ The infrastructure and application lifecycle are entirely automated using the pr
 3.  **Custom Metric-Based Autoscaling (HPA):** 
     *   The `bidding-engine` utilizes a custom Prometheus metric (`http_requests_per_second`) routed via Prometheus Adapter to scale pods from 1 to 5 dynamically during traffic spikes.
     *   The `catalog-service` utilizes standard CPU-based Horizontal Pod Autoscaling.
-4.  **Real-Time WebSocket Synchronization:** 
-    *   Uses Socket.io backed by a Redis Pub/Sub adapter to ensure that real-time bids are instantly synchronized across all active replicas of the Bidding Engine.
+4.  **Stateful Traffic & WebSocket Management:** 
+    *   Configured NGINX Ingress routing and provisioned a Redis Pub/Sub state store via Helm to ensure stateful real-time Socket.io traffic is correctly routed and synchronized across multiple distributed Bidding Engine replicas.
 5.  **Infrastructure as Code:** 
     *   Terraform provisions all baseline cluster infrastructure including ArgoCD, Kube-Prometheus-Stack, Metrics Server, MongoDB, and Redis via Helm charts.
 
@@ -40,18 +40,23 @@ The infrastructure and application lifecycle are entirely automated using the pr
 
 ```text
 .
-├── auth-service/          # Node.js REST API for JWT authentication
-├── catalog-service/       # Node.js REST API for auction item retrieval
-├── bidding-engine/        # Node.js Socket.io server with Prometheus custom metrics
-├── frontend/              # React application built with Vite
+├── auth-service/          # Sample Node.js REST API for JWT authentication
+├── catalog-service/       # Sample Node.js REST API for auction item retrieval
+├── bidding-engine/        # Sample Node.js Socket.io server with Prometheus metrics
+├── frontend/              # Sample React application built with Vite
+├── images/                # Screenshots and diagrams for documentation
+├── jenkins-server/        # Dockerfile and configurations for Jenkins server setup
 ├── k8s/                   # Kubernetes manifests managed by ArgoCD (Kustomize)
 │   ├── auth-service/
 │   ├── bidding-engine/
 │   ├── catalog-service/
 │   ├── frontend/
-│   └── shared/            # Ingress rules and Sealed Secrets
+│   ├── shared/            # Ingress rules and Sealed Secrets
+│   └── kustomization.yaml # Main Kustomize entrypoint for ArgoCD
 ├── terraform/             # Terraform configurations for Helm releases
-└── Jenkinsfile            # Declarative CI/CD pipeline definition
+├── argocd-app.yaml        # ArgoCD Application CRD for GitOps synchronization
+├── Jenkinsfile            # Declarative CI/CD pipeline definition
+└── README.md              # Project documentation
 ```
 
 ## 🚀 Getting Started
@@ -76,7 +81,7 @@ Ensure you have Kubernetes Sealed Secrets controller installed. Generate your se
 ### 3. Deploy via GitOps
 Apply the ArgoCD Application manifest to initiate the GitOps synchronization process.
 ```bash
-kubectl apply -f terraform/argocd-application.yaml
+kubectl apply -f argocd-app.yaml
 ```
 
 ### 4. Access the Application
