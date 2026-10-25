@@ -18,7 +18,7 @@ The infrastructure and application lifecycle are entirely automated using the pr
 *   **Routing & Networking:** NGINX Ingress Controller
 *   **Observability & Autoscaling:** Prometheus, Grafana, Prometheus Adapter, Metrics Server, Horizontal Pod Autoscaler (HPA)
 
-![Architecture Diagram](https://raw.githubusercontent.com/isuruamarasooriya/real-time-live-auction-platform/main/docs/architecture-diagram.png) *(Note: Add the exported Draw.io diagram to a `docs` folder and update this link)*
+![Architecture Diagram](./images/architecture-diagram.jpg)
 
 ## ✨ Key Engineering Features
 
@@ -101,11 +101,9 @@ kubectl get hpa bidding-engine-hpa -w
 
 ## 📸 Project Screenshots
 
-### 1. System Architecture
-![Architecture Diagram](./images/architecture-diagram.jpg)
 
-### 2. CI/CD Automation Pipeline (Jenkins)
+### CI/CD Automation Pipeline (Jenkins)
 ![Jenkins Pipeline](./images/jenkins-pipeline.png)
 
-### 3. Continuous Deployment & GitOps (ArgoCD)
+### Continuous Deployment & GitOps (ArgoCD)
 ![ArgoCD Dashboard](./images/argocd-dashboard.png)
