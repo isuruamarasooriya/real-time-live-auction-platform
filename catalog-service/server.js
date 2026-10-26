@@ -49,12 +49,34 @@ app.get('/api/catalog/items', async (req, res) => {
   }
 });
 
+// Health check endpoint
 app.get('/api/catalog/health', (req, res) => {
-  res.status(200).json({ status: 'Catalog Service is Up' });
+  if (mongoose.connection.readyState === 1) {
+    res.status(200).json({ status: 'Catalog Service is Up', database: 'Connected' });
+  } else {
+    res.status(503).json({ status: 'Catalog Service is Down', database: 'Disconnected' });
+  }
 });
 
 const PORT = process.env.PORT || 5002;
-app.listen(PORT, () => console.log(`Catalog Service running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Catalog Service running on port ${PORT}`));
+
+// Graceful shutdown logic
+const shutdown = async () => {
+  server.close(async () => {
+    try {
+      if (mongoose.connection.readyState !== 0) await mongoose.connection.close(false);
+      process.exit(0);
+    } catch (err) {
+      process.exit(1);
+    }
+  });
+
+  setTimeout(() => process.exit(1), 10000);
+};
+
+process.on('SIGTERM', shutdown); 
+process.on('SIGINT', shutdown);
 
 // testing auto detect
 // test agin pipeline

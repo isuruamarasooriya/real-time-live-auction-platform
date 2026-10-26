@@ -140,5 +140,40 @@ io.on('connection', (socket) => {
   });
 });
 
+// Health check endpoint
+app.get('/api/bidding/health', (req, res) => {
+  const isMongoConnected = mongoose.connection.readyState === 1;
+  const isRedisConnected = pubClient.isReady && subClient.isReady;
+
+  if (isMongoConnected && isRedisConnected) {
+    res.status(200).json({ status: 'Bidding Engine is Up', database: 'Connected', redis: 'Connected' });
+  } else {
+    res.status(503).json({ 
+      status: 'Bidding Engine is Down', 
+      database: isMongoConnected ? 'Connected' : 'Disconnected',
+      redis: isRedisConnected ? 'Connected' : 'Disconnected'
+    });
+  }
+});
+
 const PORT = process.env.PORT || 5003;
 server.listen(PORT, () => console.log(`Bidding Engine running on port ${PORT}`));
+
+// Graceful shutdown logic
+const shutdown = async () => {
+  server.close(async () => {
+    try {
+      if (mongoose.connection.readyState !== 0) await mongoose.connection.close(false);
+      if (pubClient.isReady) await pubClient.quit();
+      if (subClient.isReady) await subClient.quit();
+      process.exit(0);
+    } catch (err) {
+      process.exit(1);
+    }
+  });
+
+  setTimeout(() => process.exit(1), 10000);
+};
+
+process.on('SIGTERM', shutdown); 
+process.on('SIGINT', shutdown);

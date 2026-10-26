@@ -56,9 +56,31 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
+// Health Check Endpoint
 app.get('/api/auth/health', (req, res) => {
-  res.status(200).json({ status: 'Auth Service is Up' });
+  if (mongoose.connection.readyState === 1) {
+    res.status(200).json({ status: 'Auth Service is Up', database: 'Connected' });
+  } else {
+    res.status(503).json({ status: 'Auth Service is Down', database: 'Disconnected' });
+  }
 });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => console.log(`Auth Service running on port ${PORT}`));
+const server = app.listen(PORT, () => console.log(`Auth Service running on port ${PORT}`));
+
+// Graceful shutdown logic
+const shutdown = async () => {
+  server.close(async () => {
+    try {
+      if (mongoose.connection.readyState !== 0) await mongoose.connection.close(false);
+      process.exit(0);
+    } catch (err) {
+      process.exit(1);
+    }
+  });
+
+  setTimeout(() => process.exit(1), 10000);
+};
+
+process.on('SIGTERM', shutdown); 
+process.on('SIGINT', shutdown);
