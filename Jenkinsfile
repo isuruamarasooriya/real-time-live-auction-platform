@@ -7,6 +7,12 @@ pipeline {
 
     environment {
         GITHUB_REPO = 'isuruamarasooriya/real-time-live-auction-platform'
+        
+        // React paths are already hardcoded
+        // traffic based on relative paths without Domain/Port conflicts.
+        FRONTEND_AUTH_URL = ''
+        FRONTEND_CATALOG_URL = ''
+        FRONTEND_BIDDING_URL = ''
     }
 
     stages {
@@ -60,32 +66,49 @@ pipeline {
             }
         }
 
-        stage('3. Build Docker Image') {
+        stage('3. Run Tests (Pre-Build)') {
             when { expression { env.CHANGED_SERVICES } }
             steps {
                 script {
                     def services = env.CHANGED_SERVICES.split(',')
                     for (svc in services) {
-                        def imageName = "isuruamarasooriya/${svc}"
-                        echo "Building ${svc} image..."
-                        sh "docker build -t ${imageName}:${BUILD_NUMBER} ./${svc}"
+                        if (svc == 'frontend') {
+                            echo "Frontend tests are executed during the Docker build stage. Skipping pre-build test here."
+                        } else {
+                            echo "Running unit tests for ${svc} BEFORE building the image (Fail Fast)..."
+                            sh """
+                            docker run --rm \
+                              -v ${env.WORKSPACE}/${svc}:/app \
+                              -w /app \
+                              -e NODE_ENV=development \
+                              node:22-alpine \
+                              sh -c 'npm install && npm test'
+                            """
+                        }
                     }
                 }
             }
         }
 
-        stage('4. Run Tests') {
+        stage('4. Build Docker Image') {
             when { expression { env.CHANGED_SERVICES } }
             steps {
                 script {
                     def services = env.CHANGED_SERVICES.split(',')
                     for (svc in services) {
                         def imageName = "isuruamarasooriya/${svc}"
+                        echo "Tests passed! Now building ${svc} image..."
+                        
                         if (svc == 'frontend') {
-                            echo "Frontend tests are executed during the Docker build stage. Skipping here."
+                            sh """
+                            docker build \
+                              --build-arg VITE_AUTH_SERVICE_URL="${env.FRONTEND_AUTH_URL}" \
+                              --build-arg VITE_CATALOG_SERVICE_URL="${env.FRONTEND_CATALOG_URL}" \
+                              --build-arg VITE_BIDDING_ENGINE_URL="${env.FRONTEND_BIDDING_URL}" \
+                              -t ${imageName}:${BUILD_NUMBER} ./${svc}
+                            """
                         } else {
-                            echo "Running unit tests inside the built image for ${svc}..."
-                            sh "docker run --rm --user root -e NODE_ENV=development --entrypoint sh ${imageName}:${BUILD_NUMBER} -c 'npm install && npm test'"
+                            sh "docker build -t ${imageName}:${BUILD_NUMBER} ./${svc}"
                         }
                     }
                 }
@@ -101,7 +124,7 @@ pipeline {
                         def imageName = "isuruamarasooriya/${svc}"
                         echo "Running Trivy Security Scanner for ${svc}..."
                         sh "docker run --rm -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --severity HIGH,CRITICAL --no-progress ${imageName}:${BUILD_NUMBER}"
-                        // Temporarily remove (--exit-code 1) to review warnings without failing the pipeline. (Not sutable for production environments).
+                        // Temporarily remove (--exit-code 1) to review warnings without failing the pipeline. (Not suitable for production environments).
                     }
                 }
             }
